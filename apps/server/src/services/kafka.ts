@@ -15,6 +15,43 @@ const kafka = new Kafka({
   },
 });
 
+
+async function init() {
+  const admin = kafka.admin();
+  try {
+      console.log("Admin connecting");
+      await admin.connect();
+      console.log("Admin connected");
+
+      const topicToCreate = "MESSAGES";
+
+      // Check if the topic already exists
+      const topicExists = await admin.listTopics();
+      if (topicExists.includes(topicToCreate)) {
+          console.log(`Topic ${topicToCreate} already exists. Skipping creation.`);
+      } else {
+          console.log(`Creating topic [${topicToCreate}]`);
+          await admin.createTopics({
+              topics: [
+                  {
+                      topic: topicToCreate,
+                      numPartitions: 2
+                  },
+              ],
+          });
+          console.log(`Topic ${topicToCreate} created`);
+      }
+
+      console.log("Disconnecting admin");
+      await admin.disconnect();
+  } catch (error:any) {
+      console.error(`Error during initialization: ${error.message}`);
+  }
+}
+
+init();
+
+
 let producer: null | Producer = null;
 
 export async function createProducer() {
